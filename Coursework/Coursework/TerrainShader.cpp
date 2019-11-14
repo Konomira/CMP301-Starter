@@ -10,6 +10,12 @@ TerrainShader::TerrainShader(ID3D11Device* device, HWND hwnd) : BaseShader(devic
 
 TerrainShader::~TerrainShader()
 {
+	// Release the sampler state.
+	if (sampleState)
+	{
+		sampleState->Release();
+		sampleState = 0;
+	}
 	// Release the matrix constant buffer.
 	if (matrixBuffer)
 	{
@@ -32,9 +38,10 @@ TerrainShader::~TerrainShader()
 void TerrainShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilename)
 {
 	D3D11_BUFFER_DESC matrixBufferDesc;
-
+	D3D11_SAMPLER_DESC samplerDesc;
+	
 	// Load (+ compile) shader files
-	loadColourVertexShader(vsFilename);
+	loadTextureVertexShader(vsFilename);
 	loadPixelShader(psFilename);
 
 	// Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
@@ -48,10 +55,24 @@ void TerrainShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilen
 	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
 	renderer->CreateBuffer(&matrixBufferDesc, NULL, &matrixBuffer);
 
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR; 
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP; 
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP; 
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP; 
+	samplerDesc.MipLODBias = 0.0f; 
+	samplerDesc.MaxAnisotropy = 1; 
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS; 
+	samplerDesc.MinLOD = 0; 
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	// Create the texture sampler state.
+	renderer->CreateSamplerState(&samplerDesc, &sampleState);
+
 }
 
 
-void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix)
+void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, 
+	const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix,
+	ID3D11ShaderResourceView* texture)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	MatrixBufferType* dataPtr;
@@ -73,6 +94,13 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, cons
 
 	// Now set the constant buffer in the vertex shader with the updated values.
 	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
+	deviceContext->VSSetShaderResources(0, 1, &texture);
+	deviceContext->VSSetSamplers(0, 1, &sampleState);
+
+	deviceContext->PSSetShaderResources(0, 1, &texture);
+	deviceContext->PSSetSamplers(0, 1, &sampleState);
+
+
 }
 
 

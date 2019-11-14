@@ -6,6 +6,7 @@
 #include "../DXFramework/DXF.h"
 #include "../DXFramework/PlaneMesh.h"
 #include "TerrainShader.h"
+#include "WaterShader.h"
 
 class App1 : public BaseApplication
 {
@@ -20,6 +21,7 @@ public:
 protected:
 	bool render();
 	void gui();
+	void GenerateHeightmap();
 
 private:
 	// Main terrain mesh
@@ -28,7 +30,10 @@ private:
 	// Sea level
 	PlaneMesh* water;
 
-	TerrainShader* shader;
+	TerrainShader* terrainShader;
+	WaterShader* waterShader;
+
+	RenderTexture* heightmap;
 };
 
 #endif
