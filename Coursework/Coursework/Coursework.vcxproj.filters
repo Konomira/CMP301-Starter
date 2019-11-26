@@ -30,6 +30,9 @@
     <ClCompile Include="WaterShader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="NormalShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App1.h">
@@ -41,12 +44,27 @@
     <ClInclude Include="WaterShader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NormalShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="terrain_vs.hlsl">
       <Filter>Shader Files</Filter>
     </FxCompile>
     <FxCompile Include="terrain_ps.hlsl">
+      <Filter>Shader Files</Filter>
+    </FxCompile>
+    <FxCompile Include="normal_gs.hlsl">
+      <Filter>Shader Files</Filter>
+    </FxCompile>
+    <FxCompile Include="normal_vs.hlsl">
+      <Filter>Shader Files</Filter>
+    </FxCompile>
+    <FxCompile Include="normal_ps.hlsl">
+      <Filter>Shader Files</Filter>
+    </FxCompile>
+    <FxCompile Include="terrain_gs.hlsl">
       <Filter>Shader Files</Filter>
     </FxCompile>
   </ItemGroup>

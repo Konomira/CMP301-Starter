@@ -37,12 +37,13 @@ TerrainShader::~TerrainShader()
 
 void TerrainShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilename)
 {
-	D3D11_BUFFER_DESC matrixBufferDesc;
+	D3D11_BUFFER_DESC matrixBufferDesc, heightBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 	
 	// Load (+ compile) shader files
 	loadTextureVertexShader(vsFilename);
 	loadPixelShader(psFilename);
+	loadGeometryShader(L"terrain_gs.cso");
 
 	// Setup the description of the dynamic matrix constant buffer that is in the vertex shader.
 	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -54,6 +55,16 @@ void TerrainShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilen
 
 	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
 	renderer->CreateBuffer(&matrixBufferDesc, NULL, &matrixBuffer);
+
+	heightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	heightBufferDesc.ByteWidth = sizeof(HeightBufferType);
+	heightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	heightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	heightBufferDesc.MiscFlags = 0;
+	heightBufferDesc.StructureByteStride = 0;
+
+	renderer->CreateBuffer(&heightBufferDesc, NULL, &heightBuffer);
+
 
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR; 
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP; 
@@ -75,7 +86,9 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	ID3D11ShaderResourceView* texture)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
+
 	MatrixBufferType* dataPtr;
+	HeightBufferType* heightPtr;
 	XMMATRIX tworld, tview, tproj;
 
 
@@ -92,10 +105,20 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	dataPtr->projection = tproj;
 	deviceContext->Unmap(matrixBuffer, 0);
 
+	deviceContext->Map(heightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	heightPtr = (HeightBufferType*)mappedResource.pData;
+	heightPtr->scale = XMFLOAT4(20.0f,0,0,0);
+	heightPtr->heightOffset = XMFLOAT4(5.0f,0,0,0);
+	deviceContext->Unmap(heightBuffer, 0);
+
 	// Now set the constant buffer in the vertex shader with the updated values.
-	deviceContext->VSSetConstantBuffers(0, 1, &matrixBuffer);
+	
+
+	deviceContext->VSSetConstantBuffers(0, 1, &heightBuffer);
 	deviceContext->VSSetShaderResources(0, 1, &texture);
 	deviceContext->VSSetSamplers(0, 1, &sampleState);
+
+	deviceContext->GSSetConstantBuffers(0, 1, &matrixBuffer);
 
 	deviceContext->PSSetShaderResources(0, 1, &texture);
 	deviceContext->PSSetSamplers(0, 1, &sampleState);

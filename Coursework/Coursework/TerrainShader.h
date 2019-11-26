@@ -24,6 +24,13 @@ private:
 
 private:
 	ID3D11Buffer * matrixBuffer;
+	ID3D11Buffer * heightBuffer;
+
+	struct HeightBufferType
+	{
+		XMFLOAT4 scale;
+		XMFLOAT4 heightOffset;
+	};
 };
 
 #endif

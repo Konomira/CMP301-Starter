@@ -12,12 +12,12 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	textureMgr->loadTexture(L"heightmap", L"res/height.png");
 
 	terrainShader = new TerrainShader(renderer->getDevice(), hwnd);
+	normalShader = new NormalShader(renderer->getDevice(), hwnd);
 
 	// Initalise scene variables.
 	terrain = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext(), 100);
 	water = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext(), 100);
 	heightmap = new RenderTexture(renderer->getDevice(), 1024, 1024, SCREEN_NEAR, SCREEN_DEPTH);
-
 }
 
 
@@ -80,7 +80,13 @@ bool App1::render()
 	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"heightmap"));
 	terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
-	water->sendData(renderer->getDeviceContext());
+	if (normalToggle)
+	{
+		terrain->sendData(renderer->getDeviceContext());
+		normalShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"heightmap"));
+		normalShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
+	}
+	//water->sendData(renderer->getDeviceContext());
 	
 
 	// Render GUI
@@ -102,6 +108,7 @@ void App1::gui()
 	// Build UI
 	ImGui::Text("FPS: %.2f", timer->getFPS());
 	ImGui::Checkbox("Wireframe mode", &wireframeToggle);
+	ImGui::Checkbox("Show normals", &normalToggle);
 
 	// Render UI
 	ImGui::Render();

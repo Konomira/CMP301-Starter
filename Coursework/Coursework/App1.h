@@ -7,7 +7,7 @@
 #include "../DXFramework/PlaneMesh.h"
 #include "TerrainShader.h"
 #include "WaterShader.h"
-
+#include "NormalShader.h"
 class App1 : public BaseApplication
 {
 public:
@@ -26,11 +26,12 @@ protected:
 private:
 	// Main terrain mesh
 	PlaneMesh* terrain;
-
+	bool normalToggle;
 	// Sea level
 	PlaneMesh* water;
 
 	TerrainShader* terrainShader;
+	NormalShader* normalShader;
 	WaterShader* waterShader;
 
 	RenderTexture* heightmap;
