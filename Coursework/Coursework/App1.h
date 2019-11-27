@@ -8,6 +8,7 @@
 #include "TerrainShader.h"
 #include "WaterShader.h"
 #include "NormalShader.h"
+#include "TextureShader.h"
 class App1 : public BaseApplication
 {
 public:
@@ -20,21 +21,33 @@ public:
 
 protected:
 	bool render();
+	void renderToTexture();
 	void gui();
 	void GenerateHeightmap();
 
 private:
+	Light* sun;
+	RenderTexture* shadowMap;
+
 	// Main terrain mesh
 	PlaneMesh* terrain;
-	bool normalToggle;
+	
 	// Sea level
 	PlaneMesh* water;
 
+	// Shaders
 	TerrainShader* terrainShader;
 	NormalShader* normalShader;
 	WaterShader* waterShader;
+	TextureShader* textureShader;
 
+	// Loaded textures / maps
 	RenderTexture* heightmap;
+
+	// GUI
+	bool normalToggle;
+
+	OrthoMesh* pip;
 };
 
 #endif
