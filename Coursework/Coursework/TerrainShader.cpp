@@ -37,7 +37,7 @@ TerrainShader::~TerrainShader()
 
 void TerrainShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilename)
 {
-	D3D11_BUFFER_DESC matrixBufferDesc, heightBufferDesc;
+	D3D11_BUFFER_DESC matrixBufferDesc, heightBufferDesc, lightBufferDesc;
 	D3D11_SAMPLER_DESC samplerDesc;
 	
 	// Load (+ compile) shader files
@@ -65,6 +65,15 @@ void TerrainShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilen
 
 	renderer->CreateBuffer(&heightBufferDesc, NULL, &heightBuffer);
 
+	lightBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	lightBufferDesc.ByteWidth = sizeof(LightBufferType);
+	lightBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	lightBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	lightBufferDesc.MiscFlags = 0;
+	lightBufferDesc.StructureByteStride = 0;
+
+	renderer->CreateBuffer(&lightBufferDesc, NULL, &lightBuffer);
+
 
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR; 
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP; 
@@ -77,32 +86,38 @@ void TerrainShader::initShader(const wchar_t* vsFilename, const wchar_t* psFilen
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 	// Create the texture sampler state.
 	renderer->CreateSamplerState(&samplerDesc, &sampleState);
+	renderer->CreateSamplerState(&samplerDesc, &depthSamplerState);
 
 }
 
 
 void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext, 
 	const XMMATRIX &worldMatrix, const XMMATRIX &viewMatrix, const XMMATRIX &projectionMatrix,
-	ID3D11ShaderResourceView* texture)
+	ID3D11ShaderResourceView* depthMap, ID3D11ShaderResourceView* heightMap,
+	XMFLOAT3 camPos, Light* light)
 {
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 
 	MatrixBufferType* dataPtr;
 	HeightBufferType* heightPtr;
-	XMMATRIX tworld, tview, tproj;
+	LightBufferType* lightPtr;
+	XMMATRIX tworld, tview, tproj, lview, lproj;
 
 
 	// Transpose the matrices to prepare them for the shader.
 	tworld = XMMatrixTranspose(worldMatrix);
 	tview = XMMatrixTranspose(viewMatrix);
 	tproj = XMMatrixTranspose(projectionMatrix);
-
+	lview = XMMatrixTranspose(light->getViewMatrix());
+	lproj = XMMatrixTranspose(light->getOrthoMatrix());
 	// Lock the constant buffer so it can be written to.
 	deviceContext->Map(matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 	dataPtr = (MatrixBufferType*)mappedResource.pData;
 	dataPtr->world = tworld;// worldMatrix;
 	dataPtr->view = tview;
 	dataPtr->projection = tproj;
+	dataPtr->lightView = lview;
+	dataPtr->lightProjection = lproj;
 	deviceContext->Unmap(matrixBuffer, 0);
 
 	deviceContext->Map(heightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
@@ -111,17 +126,29 @@ void TerrainShader::setShaderParameters(ID3D11DeviceContext* deviceContext,
 	heightPtr->heightOffset = XMFLOAT4(5.0f,0,0,0);
 	deviceContext->Unmap(heightBuffer, 0);
 
+	deviceContext->Map(lightBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	lightPtr = (LightBufferType*)mappedResource.pData;
+	lightPtr->ambient = light->getAmbientColour();
+	lightPtr->diffuse = light->getDiffuseColour();
+	lightPtr->direction = light->getDirection();
+	lightPtr->position = light->getPosition();
+	lightPtr->padding = XMFLOAT2(0, 0);
+	deviceContext->Unmap(lightBuffer, 0);
+	
 	// Now set the constant buffer in the vertex shader with the updated values.
 	
 
 	deviceContext->VSSetConstantBuffers(0, 1, &heightBuffer);
-	deviceContext->VSSetShaderResources(0, 1, &texture);
+	deviceContext->VSSetShaderResources(0, 1, &heightMap);
 	deviceContext->VSSetSamplers(0, 1, &sampleState);
 
 	deviceContext->GSSetConstantBuffers(0, 1, &matrixBuffer);
 
-	deviceContext->PSSetShaderResources(0, 1, &texture);
-	deviceContext->PSSetSamplers(0, 1, &sampleState);
+	deviceContext->PSSetConstantBuffers(0, 1, &lightBuffer);
+	deviceContext->PSSetShaderResources(0, 1, &depthMap);
+	deviceContext->PSSetShaderResources(1, 1, &heightMap);
+	deviceContext->PSSetSamplers(0, 1, &depthSamplerState);
+	deviceContext->PSSetSamplers(1, 1, &sampleState);
 
 
 }
