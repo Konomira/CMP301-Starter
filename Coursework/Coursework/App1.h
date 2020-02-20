@@ -8,9 +8,6 @@
 #include "TerrainShader.h"
 #include "WaterShader.h"
 #include "NormalShader.h"
-#include "DepthShader.h"
-#include "OrthoShader.h"
-#include "LightShader.h"
 class App1 : public BaseApplication
 {
 public:
@@ -25,9 +22,6 @@ protected:
 	bool render();
 	void gui();
 	void GenerateHeightmap();
-	void depthPass();
-	void lightPass();
-	float sWidth, sHeight;
 
 private:
 	// Main terrain mesh
@@ -39,18 +33,8 @@ private:
 	TerrainShader* terrainShader;
 	NormalShader* normalShader;
 	WaterShader* waterShader;
-	DepthShader* depthShader;
-	OrthoShader* orthoShader;
-	LightShader* lightShader;
 
-
-	RenderTexture* depthMap;
-	RenderTexture* heightMap;
-	OrthoMesh* orthoMesh;
-
-	Light* light;
-
-	int lod[2];
+	RenderTexture* heightmap;
 };
 
 #endif
