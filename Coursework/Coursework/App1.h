@@ -4,8 +4,7 @@
 
 // Includes
 #include "../DXFramework/DXF.h"
-#include "../DXFramework/PlaneMesh.h"
-#include "TerrainShader.h"
+
 
 class App1 : public BaseApplication
 {
@@ -22,13 +21,7 @@ protected:
 	void gui();
 
 private:
-	// Main terrain mesh
-	PlaneMesh* terrain;
 
-	// Sea level
-	PlaneMesh* water;
-
-	TerrainShader* shader;
 };
 
 #endif

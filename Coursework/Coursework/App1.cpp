@@ -1,3 +1,5 @@
+// Lab1.cpp
+// Lab 1 example, simple coloured triangle mesh
 #include "App1.h"
 
 App1::App1()
@@ -10,10 +12,8 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 	// Call super/parent init function (required!)
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
 
-	shader = new TerrainShader(renderer->getDevice(), hwnd);
-
 	// Initalise scene variables.
-	terrain = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext(), 2);
+	
 
 }
 
@@ -61,9 +61,7 @@ bool App1::render()
 	XMMATRIX viewMatrix = camera->getViewMatrix();
 	XMMATRIX projectionMatrix = renderer->getProjectionMatrix();
 
-	terrain->sendData(renderer->getDeviceContext());
-	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
-	shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
+	
 
 	// Render GUI
 	gui();
