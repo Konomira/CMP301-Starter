@@ -9,14 +9,11 @@ void App1::init(HINSTANCE hinstance, HWND hwnd, int screenWidth, int screenHeigh
 {
 	// Call super/parent init function (required!)
 	BaseApplication::init(hinstance, hwnd, screenWidth, screenHeight, in, VSYNC, FULL_SCREEN);
-	textureMgr->loadTexture(L"heightmap", L"res/height.png");
 
-	terrainShader = new TerrainShader(renderer->getDevice(), hwnd);
+	shader = new TerrainShader(renderer->getDevice(), hwnd);
 
 	// Initalise scene variables.
-	terrain = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext(), 100);
-	water = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext(), 100);
-	heightmap = new RenderTexture(renderer->getDevice(), 1024, 1024, SCREEN_NEAR, SCREEN_DEPTH);
+	terrain = new PlaneMesh(renderer->getDevice(), renderer->getDeviceContext(), 2);
 
 }
 
@@ -29,7 +26,6 @@ App1::~App1()
 	// Release the Direct3D object.
 	
 }
-
 
 
 bool App1::frame()
@@ -52,17 +48,6 @@ bool App1::frame()
 	return true;
 }
 
-void App1::GenerateHeightmap()
-{
-	ID3D11Texture2D* renderTargetTextureMap;
-	ID3D11RenderTargetView* renderTargetViewMap;
-	ID3D11ShaderResourceView* shaderResourceViewMap;
-
-	XMMATRIX viewMatrix;
-	XMMATRIX projectionMatrix;
-
-}
-
 bool App1::render()
 {
 	// Clear the scene. (default blue colour)
@@ -77,11 +62,8 @@ bool App1::render()
 	XMMATRIX projectionMatrix = renderer->getProjectionMatrix();
 
 	terrain->sendData(renderer->getDeviceContext());
-	terrainShader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, textureMgr->getTexture(L"heightmap"));
-	terrainShader->render(renderer->getDeviceContext(), terrain->getIndexCount());
-
-	water->sendData(renderer->getDeviceContext());
-	
+	shader->setShaderParameters(renderer->getDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
+	shader->render(renderer->getDeviceContext(), terrain->getIndexCount());
 
 	// Render GUI
 	gui();
